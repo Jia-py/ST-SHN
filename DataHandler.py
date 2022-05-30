@@ -20,6 +20,7 @@ class DataHandler:
 			valT = pickle.load(fs)
 		with open(predir + 'tst.pkl', 'rb') as fs:
 			tstT = pickle.load(fs)
+		# row,col,days,categories
 		args.row, args.col, _, args.offNum = trnT.shape
 		args.areaNum = args.row * args.col
 		args.trnDays = trnT.shape[2]
@@ -39,10 +40,12 @@ class DataHandler:
 		print('Sparsity:', np.sum(trnT!=0) / np.reshape(trnT, [-1]).shape[0])
 
 	@classmethod
+	# 相当于给地区编号
 	def idEncode(cls, x, y):
 		return x * args.col + y
 
 	@classmethod
+	
 	def idDecode(cls, node):
 		return node // args.col, node % args.col
 
@@ -61,7 +64,9 @@ class DataHandler:
 		edges = list()
 		for i in range(args.row):
 			for j in range(args.col):
+				# 中心点的索引为n1
 				n1 = self.idEncode(i, j)
+				# 周围九宫格的边
 				for k in range(len(mx)):
 					temx = i + mx[k]
 					temy = j + my[k]
@@ -70,11 +75,15 @@ class DataHandler:
 					n2 = self.idEncode(temx, temy)
 					edges.append([n1, n2])
 		edges.sort(key=lambda x: x[0]*1e5+x[1]) # 1e5 should be bigger than the number of areas
+		# rowTot,colTot均为[0]*areaNum的一维数组
 		rowTot, colTot = [[0] * args.areaNum for i in range(2)]
+		# 创建temporal edges
+		# 把到row与col对应节点的边数量+1
 		for e in range(len(edges)):
 			rowTot[edges[e][0]] += 1
 			colTot[edges[e][1]] += 1
 		vals = np.ones(len(edges))
+		# 标准化
 		for e in range(len(vals)):
 			vals[e] /= np.sqrt(rowTot[edges[e][0]] * colTot[edges[e][1]])
 		edges = np.array(edges)
